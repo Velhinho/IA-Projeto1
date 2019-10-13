@@ -4,10 +4,36 @@ import time
 
 
 class Node:
-  def __init__(self, adjacency):
+  def __init__(self, transport_list):
     self.state = "undiscovered"
     self.parent = -1
-    self.adjacency = adjacency
+    self.adjacency_list = self.add_adj_list(transport_list)
+    self.transport_list = transport_list
+  
+  def add_adj_list(self, transport_list):
+    adjacency_list = []
+    for transport_tupple in transport_list:
+      adjacency_list.append(transport_tupple[1])
+
+    return adjacency_list
+
+  def get_state(self):
+    return self.state
+
+  def set_state(self, new_state):
+    self.state = new_state
+    
+  def get_parent(self):
+    return self.parent
+
+  def set_parent(self, new_parent):
+    self.parent = new_parent
+
+  def get_adjacency_list(self):
+    return self.adjacency_list
+
+  def get_transport_list(self):
+    return self.transport_list
 
 
 class SearchProblem:
@@ -25,17 +51,15 @@ class SearchProblem:
   def search(self, init, limitexp = 2000, limitdepth = 10, tickets = [math.inf,math.inf,math.inf]):
     # init = initial position
 
-    make_graph(self.model)
-
+    graph = self.make_graph()
+    
     return []
 
-  def make_graph(model):
+  def make_graph(self):
     graph = []
-    for adjacency in model:
-      node = Node()
-
-
-  def bfs(graph, start):
-    for vertex_u in graph:
-
+    for transport_list in self.model:
+      node = Node(transport_list)
+      graph.append(node)
     
+    graph.pop(0)  # first node is empty
+    return graph
