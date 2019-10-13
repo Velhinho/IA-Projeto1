@@ -3,6 +3,13 @@ import pickle
 import time
 
 
+class Node:
+  def __init__(self, adjacency):
+    self.state = "undiscovered"
+    self.parent = -1
+    self.adjacency = adjacency
+
+
 class SearchProblem:
 
   def __init__(self, goal, model, auxheur = []):
@@ -22,20 +29,13 @@ class SearchProblem:
 
     return []
 
-
-class Node:
-  def __init__(self, adjacency):
-    self.state = "undiscovered"
-    self.parent = -1
-    self.adjacency = adjacency
+  def make_graph(model):
+    graph = []
+    for adjacency in model:
+      node = Node()
 
 
-def make_graph(model):
-  graph = []
-  for adjacency in model:
-    node = Node()
+  def bfs(graph, start):
+    for vertex_u in graph:
 
-
-def bfs(graph, start):
-  for vertex_u in graph:
     
