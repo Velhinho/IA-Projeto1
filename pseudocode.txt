@@ -1,0 +1,38 @@
+Graph in adjacency list
+
+BFS(Graph, start)
+    for each vertex_u in Graph
+        vertex_u.state = undiscovered
+        vertex_u.distance = infinite
+        vertex_u.parent = NULL
+
+    start.state = discovered
+    start.distance = 0
+    start.parent = NULL
+
+    queue = {}
+    queue.push(start)
+
+    while queue not empty
+        vertex_u = queue.pop()
+        for each vertex_v in vertex_u.adjacency
+            if vertex_v.state == undiscovered
+                vertex_v.state = discovered
+                vertex_v.distance = vertex_u.distance + 1
+                vertex_v.parent = vertex_u
+                queue.push(vertex_v)
+
+            vertex_u.state = expanded
+
+
+Find-Path(Graph, start, end) 
+// Finds the shortest path recursively after the BFS
+
+    if start == end
+        return start
+
+    else if end.parent == NULL
+        return ERROR
+
+    else
+        return Find-Path(Graph, start, end.parent) + end
