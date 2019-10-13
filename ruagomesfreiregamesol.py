@@ -12,8 +12,8 @@ class Node:
   
   def add_adj_list(self, transport_list):
     adjacency_list = []
-    for transport_tupple in transport_list:
-      adjacency_list.append(transport_tupple[1])
+    for transport_tuple in transport_list:
+      adjacency_list.append(transport_tuple[1])
 
     return adjacency_list
 
