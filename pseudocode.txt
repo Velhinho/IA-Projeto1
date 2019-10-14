@@ -28,7 +28,7 @@ BFS(Graph, start)
 Find-Path(Graph, start, end) 
 // Finds the shortest path recursively after the BFS
 
-    if start == end
+    if start.position == end.position
         return start
 
     else if end.parent == NULL
