@@ -2,6 +2,53 @@ import math
 import pickle
 import time
 
+class Graph:
+  def __init__(self, model):
+    self.graph = []
+    position = 0
+
+    for transport_list in model:
+      node = Node(transport_list, position)
+      self.graph.append(node)
+      position += 1
+
+  def get_node(self, position):
+    return self.graph[position]
+
+  def bfs(self, start_position, end_position):
+    start = self.get_node(start_position)
+    end = self.get_node(end_position)
+
+    start.set_state("discovered")
+    start.set_parent(None)
+    queue = []
+    queue.append(start)
+
+    while len(queue) > 0:
+      node_a = queue.pop(0)
+      for vertex in node_a.get_adjacency_list():
+        node_b = self.get_node(vertex)
+
+        if node_b.get_state() == "undiscovered":
+          node_b.set_state("discovered")
+          node_b.set_parent(node_a)
+          queue.append(node_b)
+
+        node_a.set_state("expanded")
+
+    return self.find_path(start, end)
+
+  def find_path(self, start, end):
+
+    if start.get_position() == end.get_position():
+      return [start]
+
+    elif end.get_parent() == None:
+      raise ValueError
+
+    else:
+      return self.find_path(start, end.get_parent()) + [end]
+
 
 class Node:
   def __init__(self, transport_list, position):
@@ -55,55 +102,13 @@ class SearchProblem:
   def search(self, init, limitexp = 2000, limitdepth = 10, tickets = [math.inf,math.inf,math.inf]):
     # init = initial position
 
-    graph = self.make_graph()
-    start_node = graph[init[0]]
-    goal_node = graph[self.goal[0]]
-    result = self.bfs(graph, start_node, goal_node)
+    graph = Graph(self.model)
+    # print(self.goal[0]) 4th test goal ??????????????/
+    result = graph.bfs(init[0], self.goal[0])
     
     asd = []
     for node in result:
-      print(node.get_position())
+      asd.append(node.get_position())
     print(asd)
 
     return []
-
-  def make_graph(self):
-    graph = []
-    position = 0
-    
-    for transport_list in self.model:
-      node = Node(transport_list, position)
-      graph.append(node)
-      position += 1
-    
-    return graph
-
-  def bfs(self, graph, start, end):
-    def find_path(graph, start, end):
-
-      if start.get_position() == end.get_position():
-        return [start]
-
-      elif end.get_parent() == None:
-        return []
-
-      else:
-        return find_path(graph, start, end.get_parent()) + [end]
-  
-    start.set_state("discovered")
-    start.set_parent(None)
-
-    queue = []
-    queue.append(start)
-
-    while len(queue) > 0:
-      vertex_a = queue.pop(0)
-      for vertex_b in vertex_a.get_adjacency_list():
-        if graph[vertex_b].get_state() == "undiscovered":
-          graph[vertex_b].set_state("discovered")
-          graph[vertex_b].set_parent(vertex_a)
-          queue.append(graph[vertex_b])
-        
-        vertex_a.set_state("expanded")
-    
-    return find_path(graph, start, end)
