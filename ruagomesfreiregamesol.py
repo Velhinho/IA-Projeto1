@@ -101,7 +101,7 @@ class Graph:
 class Node:
   def __init__(self, transport_list, position):
     self.state = "undiscovered"
-    self.parent = None
+    self.parent = {"transport": None, "parent_node": None}
     self.adjacency_list = self.add_adj_list(transport_list)
     self.transport_list = transport_list
     self.position = position
@@ -125,10 +125,16 @@ class Node:
     self.state = new_state
     
   def get_parent(self):
-    return self.parent
+    return self.parent["parent_node"]
+
+  def get_parent_transport(self):
+    return self.parent["transport"]
 
   def set_parent(self, new_parent):
-    self.parent = new_parent
+    self.parent["parent_node"] = new_parent
+
+  def set_parent_transport(self, new_transport):
+    self.parent["transport"] = new_transport
 
   def get_adjacency_list(self):
     return self.adjacency_list
