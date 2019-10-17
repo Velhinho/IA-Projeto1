@@ -18,7 +18,6 @@ class Graph:
   def get_graph_iter(self):
     return iter(self.graph)
 
-
   def bfs(self, start_position, end_position):
     start = self.get_node(start_position)
     end = self.get_node(end_position)
@@ -48,7 +47,7 @@ class Graph:
       return [start]
 
     elif end.get_parent() == None:
-      raise ValueError
+      raise ValueError("No path")
 
     else:
       return self.find_path(start, end.get_parent()) + [end]
@@ -96,7 +95,7 @@ class Graph:
           if not openList.node_exists(neighbor_node):
             openList.put(neighbor_node)
 
-    return -1
+    raise ValueError("astar: couldn't find path")
 
 
 class Node:
