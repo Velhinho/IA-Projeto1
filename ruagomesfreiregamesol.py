@@ -13,6 +13,8 @@ class Node:
     self.f = math.inf
     self.g = math.inf
     self.h = math.inf
+    self.x = 0
+    self.y = 0
     
   def add_adj_list(self, transport_list):
     adjacency_list = []
@@ -103,6 +105,8 @@ class SearchProblem:
     
     for transport_list in self.model:
       node = Node(transport_list, position)
+      node.x = self.auxheur[position - 1][0]
+      node.y = self.auxheur[position - 1][1]
       graph.append(node)
       position += 1
     
@@ -127,7 +131,9 @@ class SearchProblem:
 
     #heuristic value for every node
     for node in graph:
-      node.h = 0
+      deltaX = node.x - end.x
+      deltaY = node.y - end.y
+      node.h = deltaX ** 2 + deltaY ** 2
 
     graph[start.get_position()].f = 0
     graph[start.get_position()].g = 0
