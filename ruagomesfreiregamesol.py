@@ -81,7 +81,7 @@ class SearchProblem:
     self.auxheur = auxheur  # Map coordenates of each node
     return
 
-  def search(self, init, limitexp = 2000, limitdepth = 10, tickets = [math.inf,math.inf,math.inf]):
+  def search(self, init, limitexp = 2000, limitdepth = 10, tickets = [math.inf,math.inf,math.inf], anyorder = False):
     # init = initial position
 
     graph = self.make_graph()
