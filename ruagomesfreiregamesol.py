@@ -50,13 +50,13 @@ class Graph:
   def find_path(self, start, end):
 
     if start.get_position() == end.get_position():
-      return [[], start.get_position()]
+      return [[[], [start.get_position()]]]
 
     elif end.get_parent() == None:
       raise ValueError("No path")
 
     else:
-      return self.find_path(start, end.get_parent()) + [end.get_parent_transport(), end.get_position()]
+      return self.find_path(start, end.get_parent()) + [[[end.get_parent_transport()], [end.get_position()]]]
 
   def astar(self, start_position, end_position):
 
@@ -204,11 +204,11 @@ class SearchProblem:
     # init = initial position
 
     graph = Graph(self.model)
-    # print(self.goal[0]) 4th test goal ??????????????/
-    result = graph.bfs(init[0], self.goal[0])
-    print(result)
+    # # print(self.goal[0]) 4th test goal ??????????????/
+    # result = graph.bfs(init[0], self.goal[0])
+    # print(result)
 
-    result2 = graph.astar(init[0], self.goal[0])
-    print(result2)
+    # result2 = graph.astar(init[0], self.goal[0])
+    # print(result2)
     
-    return []
+    return graph.astar(init[0], self.goal[0])
