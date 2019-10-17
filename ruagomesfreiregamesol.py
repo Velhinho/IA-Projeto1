@@ -15,6 +15,10 @@ class Graph:
   def get_node(self, position):
     return self.graph[position]
 
+  def get_graph_iter(self):
+    return iter(self.graph)
+
+
   def bfs(self, start_position, end_position):
     start = self.get_node(start_position)
     end = self.get_node(end_position)
@@ -58,13 +62,13 @@ class Graph:
     closedList = []
 
     #heuristic value for every node
-    for node in graph:
+    for node in self.get_graph_iter():
       deltaX = node.x - end.x
       deltaY = node.y - end.y
       node.h = deltaX ** 2 + deltaY ** 2
 
-    graph[start.get_position()].f = 0
-    graph[start.get_position()].g = 0
+    start.f = 0
+    start.g = 0
     openList.put(start)
 
     while not openList.isEmpty():
@@ -76,20 +80,21 @@ class Graph:
         return self.find_path(start, end)
 
       for neighbor_pos in current_node.adjacency_list:
-        if graph[neighbor_pos] in closedList:
+        neighbor_node = self.get_node(neighbor_pos)
+        if neighbor_node in closedList:
           continue
 
         #step cost = 1
         tentative_g_score = current_node.g + 1
 
-        if tentative_g_score < graph[neighbor_pos].g:
+        if tentative_g_score < neighbor_node.g:
           #new g value is better, update costs
-          graph[neighbor_pos].set_parent(current_node)
-          graph[neighbor_pos].g = tentative_g_score
-          graph[neighbor_pos].f = graph[neighbor_pos].g + graph[neighbor_pos].h
+          neighbor_node.set_parent(current_node)
+          neighbor_node.g = tentative_g_score
+          neighbor_node.f = neighbor_node.g + neighbor_node.h
 
-          if not openList.node_exists(graph[neighbor_pos]):
-            openList.put(graph[neighbor_pos])
+          if not openList.node_exists(neighbor_node):
+            openList.put(neighbor_node)
 
     return -1
 
@@ -184,7 +189,7 @@ class SearchProblem:
       asd.append(node.get_position())
     print(asd)
 
-    result2 = self.astar(graph, init[0], self.goal[0])
+    result2 = graph.astar(init[0], self.goal[0])
     for node in result2:
       print(node.get_position())
     print(asd)
