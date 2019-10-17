@@ -37,9 +37,12 @@ class Graph:
           node_b.set_parent(node_a)
           queue.append(node_b)
 
-        node_a.set_state("expande(d")
+        if node_b.get_position() == end.get_position():
+          return self.find_path(start, end)
 
-    return self.find_path(start, end)
+        node_a.set_state("expanded")
+
+    raise ValueError("bfs: couldn't find path")
 
   def find_path(self, start, end):
 
