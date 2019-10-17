@@ -24,7 +24,6 @@ class Graph:
 
     start.set_state("discovered")
     start.set_parent(None)
-    start.set_parent_transport([])
     queue = []
     queue.append(start)
 
