@@ -34,7 +34,7 @@ class Graph:
           node_b.set_parent(node_a)
           queue.append(node_b)
 
-        node_a.set_state("expanded")
+        node_a.set_state("expande(d")
 
     return self.find_path(start, end)
 
@@ -49,6 +49,50 @@ class Graph:
     else:
       return self.find_path(start, end.get_parent()) + [end]
 
+  def astar(self, start_position, end_position):
+
+    start = self.get_node(start_position)
+    end = self.get_node(end_position)
+
+    openList = NodePQueue()
+    closedList = []
+
+    #heuristic value for every node
+    for node in graph:
+      deltaX = node.x - end.x
+      deltaY = node.y - end.y
+      node.h = deltaX ** 2 + deltaY ** 2
+
+    graph[start.get_position()].f = 0
+    graph[start.get_position()].g = 0
+    openList.put(start)
+
+    while not openList.isEmpty():
+      current_node = openList.get()
+      closedList.append(current_node)
+
+      #end
+      if current_node.position == end.position:
+        return self.find_path(start, end)
+
+      for neighbor_pos in current_node.adjacency_list:
+        if graph[neighbor_pos] in closedList:
+          continue
+
+        #step cost = 1
+        tentative_g_score = current_node.g + 1
+
+        if tentative_g_score < graph[neighbor_pos].g:
+          #new g value is better, update costs
+          graph[neighbor_pos].set_parent(current_node)
+          graph[neighbor_pos].g = tentative_g_score
+          graph[neighbor_pos].f = graph[neighbor_pos].g + graph[neighbor_pos].h
+
+          if not openList.node_exists(graph[neighbor_pos]):
+            openList.put(graph[neighbor_pos])
+
+    return -1
+
 
 class Node:
   def __init__(self, transport_list, position):
@@ -57,6 +101,11 @@ class Node:
     self.adjacency_list = self.add_adj_list(transport_list)
     self.transport_list = transport_list
     self.position = position
+    self.f = math.inf
+    self.g = math.inf
+    self.h = math.inf
+    self.x = 0
+    self.y = 0
     
   def add_adj_list(self, transport_list):
     adjacency_list = []
@@ -86,6 +135,30 @@ class Node:
   def get_position(self):
     return self.position
 
+class NodePQueue:
+  def __init__(self):
+    self.queue = []
+
+  def put(self, node):
+    self.queue.append(node)
+
+  def isEmpty(self):
+    return len(self.queue) == 0
+
+  def node_exists(self, node):
+    for item in self.queue:
+      if item.position == node.position:
+        return True
+    return False
+
+  def get(self):
+    #priority is minimum f value
+    min = 0
+    for i in range(len(self.queue)):
+      if self.queue[i].f < self.queue[min].f:
+        min = i
+    return self.queue.pop(min)
+
 
 class SearchProblem:
 
@@ -99,7 +172,7 @@ class SearchProblem:
     self.auxheur = auxheur  # Map coordenates of each node
     return
 
-  def search(self, init, limitexp = 2000, limitdepth = 10, tickets = [math.inf,math.inf,math.inf]):
+  def search(self, init, limitexp = 2000, limitdepth = 10, tickets = [math.inf,math.inf,math.inf], anyorder = False):
     # init = initial position
 
     graph = Graph(self.model)
@@ -111,4 +184,9 @@ class SearchProblem:
       asd.append(node.get_position())
     print(asd)
 
+    result2 = self.astar(graph, init[0], self.goal[0])
+    for node in result2:
+      print(node.get_position())
+    print(asd)
+    
     return []
