@@ -28,19 +28,22 @@ class Graph:
     queue.append(start)
 
     while len(queue) > 0:
-      node_a = queue.pop(0)
-      for vertex in node_a.get_adjacency_list():
-        node_b = self.get_node(vertex)
+      node_parent = queue.pop(0)
+      for vertex in node_parent.get_adjacency_list():
+        node_child = self.get_node(vertex)
 
-        if node_b.get_state() == "undiscovered":
-          node_b.set_state("discovered")
-          node_b.set_parent(node_a)
-          queue.append(node_b)
+        if node_child.get_state() == "undiscovered":
+          node_child.set_state("discovered")
+          node_child.set_parent(node_parent)
 
-        if node_b.get_position() == end.get_position():
+          transport = node_parent.get_child_transport(node_child.get_position())
+          node_child.set_parent_transport(transport)
+          queue.append(node_child)
+
+        if node_parent.get_position() == end.get_position():
           return self.find_path(start, end)
 
-        node_a.set_state("expanded")
+        node_parent.set_state("expanded")
 
     raise ValueError("bfs: couldn't find path")
 
@@ -81,7 +84,7 @@ class Graph:
       if current_node.position == end.position:
         return self.find_path(start, end)
 
-      for neighbor_pos in current_node.adjacency_list:
+      for neighbor_pos in current_node.get_adjacency_list():
         neighbor_node = self.get_node(neighbor_pos)
         if neighbor_node in closedList:
           continue
@@ -91,6 +94,9 @@ class Graph:
 
         if tentative_g_score < neighbor_node.g:
           #new g value is better, update costs
+          transport = current_node.get_child_transport(neighbor_pos)
+          neighbor_node.set_parent_transport(transport)
+          
           neighbor_node.set_parent(current_node)
           neighbor_node.g = tentative_g_score
           neighbor_node.f = neighbor_node.g + neighbor_node.h
@@ -105,8 +111,10 @@ class Node:
   def __init__(self, transport_list, position):
     self.state = "undiscovered"
     self.parent = {"transport": None, "parent_node": None}
-    self.adjacency_list = self.add_adj_list(transport_list)
-    self.transport_list = transport_list
+
+    # transport tuple [transport, next_position]
+    self.adjacency_list = self.add_adj_list(transport_list)    
+    self.transport_dict = self.add_transport_dict(transport_list)
     self.position = position
     self.f = math.inf
     self.g = math.inf
@@ -118,8 +126,14 @@ class Node:
     adjacency_list = []
     for transport_tuple in transport_list:
       adjacency_list.append(transport_tuple[1])
-
     return adjacency_list
+
+  def add_transport_dict(self, transport_list):
+    transport_dict = {}
+    for transport_tuple in transport_list:
+      position = str(transport_tuple[1])
+      transport_dict[position] = transport_tuple[0]
+    return transport_dict
 
   def get_state(self):
     return self.state
@@ -142,8 +156,9 @@ class Node:
   def get_adjacency_list(self):
     return self.adjacency_list
 
-  def get_transport_list(self):
-    return self.transport_list
+  def get_child_transport(self, child_position):
+    position = str(child_position)
+    return self.transport_dict[position]
 
   def get_position(self):
     return self.position
