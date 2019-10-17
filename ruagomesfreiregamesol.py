@@ -24,6 +24,7 @@ class Graph:
 
     start.set_state("discovered")
     start.set_parent(None)
+    start.set_parent_transport([])
     queue = []
     queue.append(start)
 
@@ -50,13 +51,13 @@ class Graph:
   def find_path(self, start, end):
 
     if start.get_position() == end.get_position():
-      return [[], start.get_position()]
+      return [[[], [start.get_position()]]]
 
     elif end.get_parent() == None:
       raise ValueError("No path")
 
     else:
-      return self.find_path(start, end.get_parent()) + [end.get_parent_transport(), end.get_position()]
+      return self.find_path(start, end.get_parent()) + [[[end.get_parent_transport()], [end.get_position()]]]
 
   def astar(self, start_position, end_position):
 
@@ -206,9 +207,9 @@ class SearchProblem:
     graph = Graph(self.model)
     # print(self.goal[0]) 4th test goal ??????????????/
     result = graph.bfs(init[0], self.goal[0])
-    print(result)
+    # print(result)
 
-    result2 = graph.astar(init[0], self.goal[0])
-    print(result2)
+    # result2 = graph.astar(init[0], self.goal[0])
+    # print(result2)
     
-    return []
+    return result
