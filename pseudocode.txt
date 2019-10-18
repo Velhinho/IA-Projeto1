@@ -27,11 +27,9 @@ BFS(Graph, start)
 BFS_with_tickets(Graph, start, ticket_list)
     for each vertex_u in Graph
         vertex_u.state = undiscovered
-        vertex_u.distance = infinite
         vertex_u.parent = NULL
 
     start.state = discovered
-    start.distance = 0
     start.parent = NULL
     start.ticket_list = ticket_list
 
@@ -40,12 +38,16 @@ BFS_with_tickets(Graph, start, ticket_list)
 
     while queue not empty
         vertex_u = queue.pop()
-        for each vertex_v in vertex_u.adjacency
-            if 
-            if vertex_v.state == undiscovered
+        current_tickets = vertex_u.ticket_list
+
+        for each vertex_v in vertex_u.adjacency_list
+            if graph.not_enough_tickets(vertex_v, current_tickets)
+                continue
+            
+            else if vertex_v.state == undiscovered
                 vertex_v.state = discovered
-                vertex_v.distance = vertex_u.distance + 1
                 vertex_v.parent = vertex_u
+                vertex_v.ticket_list = graph.take_ticket(vertex_v, current_tickets)
                 queue.push(vertex_v)
 
             vertex_u.state = expanded
