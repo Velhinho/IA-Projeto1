@@ -58,7 +58,7 @@ class Graph:
     else:
       return self.find_path(start, end.get_parent()) + [[[end.get_parent_transport()], [end.get_position()]]]
 
-  def astar(self, start_position, end_position):
+  def astar(self, start_position, end_position, tickets):
 
     start = self.get_node(start_position)
     end = self.get_node(end_position)
@@ -74,6 +74,7 @@ class Graph:
 
     start.f = 0
     start.g = 0
+    start.tickets = tickets
     openList.put(start)
 
     while not openList.isEmpty():
@@ -94,15 +95,21 @@ class Graph:
 
         if tentative_g_score < neighbor_node.g:
           #new g value is better, update costs
-          transport = current_node.get_child_transport(neighbor_pos)
-          neighbor_node.set_parent_transport(transport)
-          
-          neighbor_node.set_parent(current_node)
-          neighbor_node.g = tentative_g_score
-          neighbor_node.f = neighbor_node.g + neighbor_node.h
-
-          if not openList.node_exists(neighbor_node):
-            openList.put(neighbor_node)
+          transportList = current_node.get_child_transport(neighbor_pos)
+          for transport in transportList:
+            #not enough tickets for this transport, check other transports available
+            if current_node.tickets[transport] == 0:
+              continue
+            neighbor_node.tickets[0] = current_node.tickets[0]
+            neighbor_node.tickets[1] = current_node.tickets[1]
+            neighbor_node.tickets[2] = current_node.tickets[2]
+            neighbor_node.tickets[transport] -= 1
+            neighbor_node.set_parent_transport(transport)       
+            neighbor_node.set_parent(current_node)
+            neighbor_node.g = tentative_g_score
+            neighbor_node.f = neighbor_node.g + neighbor_node.h
+            if not openList.node_exists(neighbor_node):
+              openList.put(neighbor_node)
 
     raise ValueError("astar: couldn't find path")
 
@@ -110,7 +117,7 @@ class Graph:
 class Node:
   def __init__(self, transport_list, position):
     self.state = "undiscovered"
-    self.parent = {"transport": None, "parent_node": None}
+    self.parent = {"transport": [], "parent_node": None}
 
     # transport tuple [transport, next_position]
     self.adjacency_list = self.add_adj_list(transport_list)    
@@ -121,6 +128,7 @@ class Node:
     self.h = math.inf
     self.x = 0
     self.y = 0
+    self.tickets = [math.inf, math.inf, math.inf]
     
   def add_adj_list(self, transport_list):
     adjacency_list = []
@@ -132,7 +140,10 @@ class Node:
     transport_dict = {}
     for transport_tuple in transport_list:
       position = str(transport_tuple[1])
-      transport_dict[position] = transport_tuple[0]
+      if position in transport_dict:
+        transport_dict[position].append(transport_tuple[0])
+      else:
+        transport_dict[position] = [transport_tuple[0]]
     return transport_dict
 
   def get_state(self):
@@ -175,7 +186,7 @@ class NodePQueue:
 
   def node_exists(self, node):
     for item in self.queue:
-      if item.position == node.position:
+      if item.position == node.position and item.parent["transport"] == node.parent["transport"]:
         return True
     return False
 
@@ -211,4 +222,4 @@ class SearchProblem:
     # result2 = graph.astar(init[0], self.goal[0])
     # print(result2)
     
-    return graph.astar(init[0], self.goal[0])
+    return graph.astar(init[0], self.goal[0], tickets)
