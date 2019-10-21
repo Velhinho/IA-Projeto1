@@ -66,8 +66,11 @@ class Graph:
     openList = NodePQueue()
     closedList = []
 
-    #heuristic value for every node
     for node in self.get_graph_iter():
+      node.tickets = [math.inf, math.inf, math.inf]
+      node.parent = {"transport": [], "parent_node": None}
+      node.f = math.inf
+      node.g = math.inf
       deltaX = node.x - end.x
       deltaY = node.y - end.y
       node.h = deltaX ** 2 + deltaY ** 2
@@ -83,7 +86,7 @@ class Graph:
 
       #end
       if current_node.position == end.position:
-        return self.find_path(start, end)
+        return self.find_path(start, end), current_node.tickets
 
       for neighbor_pos in current_node.get_adjacency_list():
         neighbor_node = self.get_node(neighbor_pos)
@@ -221,5 +224,48 @@ class SearchProblem:
 
     # result2 = graph.astar(init[0], self.goal[0])
     # print(result2)
-    
-    return graph.astar(init[0], self.goal[0], tickets)
+
+    result1, newtickets1 = graph.astar(init[0], self.goal[0], tickets)
+
+    if len(self.goal) == 1:
+      return result1
+    else:
+      result2, newtickets2 = graph.astar(init[1], self.goal[1], newtickets1)
+      result3, newtickets3 = graph.astar(init[2], self.goal[2], newtickets2)
+
+      finalres = []
+      max_result_length = max(len(result1), len(result2), len(result3))
+      for i in range(0, max_result_length):
+        finalres.append([])
+      self.extend_result(result1, max_result_length)
+      self.extend_result(result2, max_result_length)
+      self.extend_result(result3, max_result_length)
+
+      for index, item in enumerate(finalres):
+        if index == 0:
+          item.append([])
+          goal_list = []
+          goal_list.append(result1[0][1][0])
+          goal_list.append(result2[0][1][0])
+          goal_list.append(result3[0][1][0])
+          item.append(goal_list)
+          continue
+        transportlist = []
+        transportlist.append(result1[index][0][0])
+        transportlist.append(result2[index][0][0])
+        transportlist.append(result3[index][0][0])
+        item.append(transportlist)
+        goallist = []
+        goallist.append(result1[index][1][0])
+        goallist.append(result2[index][1][0])
+        goallist.append(result3[index][1][0])
+        item.append(goallist)
+
+      return finalres
+
+
+  def extend_result(self, result_list, new_length):
+    last_result = result_list[-1]
+    while len(result_list) < new_length:
+      result_list.append(last_result)
+    return
