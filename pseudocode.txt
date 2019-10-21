@@ -37,20 +37,21 @@ BFS_with_tickets(Graph, start, ticket_list)
     queue.push(start)
 
     while queue not empty
-        vertex_u = queue.pop()
-        current_tickets = vertex_u.ticket_list
+        parent_node = queue.pop()
 
-        for each vertex_v in vertex_u.adjacency_list
-            if graph.not_enough_tickets(vertex_v, current_tickets)
+        for each next_vertex in parent_node.adjacency_list
+            child_node = graph.get_node(next_vertex)
+
+            if not graph.enough_tickets(parent_node, next_vertex)
                 continue
             
-            else if vertex_v.state == undiscovered
-                vertex_v.state = discovered
-                vertex_v.parent = vertex_u
-                vertex_v.ticket_list = graph.take_ticket(vertex_v, current_tickets)
-                queue.push(vertex_v)
+            else if child_node.state == undiscovered
+                child_node.state = discovered
+                child_node.parent = parent_node
+                child_node.ticket_list = graph.take_ticket(parent_node, child_node, next_vertex)
+                queue.push(child_node)
 
-            vertex_u.state = expanded
+            parent_node.state = expanded
 
 
 Find-Path(Graph, start, end) 

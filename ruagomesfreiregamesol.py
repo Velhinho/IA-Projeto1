@@ -12,114 +12,74 @@ class Graph:
       self.graph.append(node)
       position += 1
 
-  def get_node(self, position):
+  def get_node_from_vertex(self, vertex):
+    position = vertex[1]
     return self.graph[position]
 
-  def get_graph_iter(self):
-    return iter(self.graph)
+  def get_node_from_position(self, position):
+    return self.graph[position]
 
-  def bfs(self, start_position, end_position):
-    start = self.get_node(start_position)
-    end = self.get_node(end_position)
+  def enough_tickets(self, parent_node, next_vertex):
+    # Check if enough tickets to go to next vertex
+    transport = next_vertex[0]
+    current_tickets = parent_node.get_ticket_list()
+    return current_tickets[transport] - 1 > 0
 
+  def take_ticket(self, parent_node, child_node, next_vertex):
+    # Take away the ticket necessary to go from parent to child
+    # Child_node knows which transport to take from parent_node
+    transport = next_vertex[0]
+    current_tickets = parent_node.get_ticket_list().copy()
+    current_tickets[transport] -= 1
+    child_node.set_parent_transport(transport)
+    return current_tickets
+
+  def bfs(self, start_position, end_position, tickets):
+    start = self.get_node_from_position(start_position)
+    end = self.get_node_from_position(end_position)
     start.set_state("discovered")
     start.set_parent(None)
+    start.set_ticket_list(tickets)
+
     queue = []
     queue.append(start)
 
     while len(queue) > 0:
-      node_a = queue.pop(0)
-      for vertex in node_a.get_adjacency_list():
-        node_b = self.get_node(vertex)
+      parent_node = queue.pop(0)
 
-        if node_b.get_state() == "undiscovered":
-          node_b.set_state("discovered")
-          node_b.set_parent(node_a)
-          queue.append(node_b)
+      for next_vertex in parent_node.get_transport_list():
+        child_node = self.get_node_from_vertex(next_vertex)
 
-        if node_b.get_position() == end.get_position():
-          return self.find_path(start, end)
+        if self.enough_tickets(parent_node, next_vertex):
+          if child_node.get_state() == "undiscovered":
+            child_node.set_state("discovered")
+            child_node.set_parent(parent_node)
+            current_tickets = self.take_ticket(parent_node, child_node, next_vertex)
+            child_node.set_ticket_list(current_tickets)
+            queue.append(child_node)
 
-        node_a.set_state("expanded")
-
-    raise ValueError("bfs: couldn't find path")
+    return self.find_path(start, end)
 
   def find_path(self, start, end):
 
     if start.get_position() == end.get_position():
-      return [start]
+      return [start.get_position()]
 
     elif end.get_parent() == None:
       raise ValueError("No path")
 
     else:
-      return self.find_path(start, end.get_parent()) + [end]
-
-  def astar(self, start_position, end_position):
-
-    start = self.get_node(start_position)
-    end = self.get_node(end_position)
-
-    openList = NodePQueue()
-    closedList = []
-
-    #heuristic value for every node
-    for node in self.get_graph_iter():
-      deltaX = node.x - end.x
-      deltaY = node.y - end.y
-      node.h = deltaX ** 2 + deltaY ** 2
-
-    start.f = 0
-    start.g = 0
-    openList.put(start)
-
-    while not openList.isEmpty():
-      current_node = openList.get()
-      closedList.append(current_node)
-
-      #end
-      if current_node.position == end.position:
-        return self.find_path(start, end)
-
-      for neighbor_pos in current_node.adjacency_list:
-        neighbor_node = self.get_node(neighbor_pos)
-        if neighbor_node in closedList:
-          continue
-
-        #step cost = 1
-        tentative_g_score = current_node.g + 1
-
-        if tentative_g_score < neighbor_node.g:
-          #new g value is better, update costs
-          neighbor_node.set_parent(current_node)
-          neighbor_node.g = tentative_g_score
-          neighbor_node.f = neighbor_node.g + neighbor_node.h
-
-          if not openList.node_exists(neighbor_node):
-            openList.put(neighbor_node)
-
-    raise ValueError("astar: couldn't find path")
+      return self.find_path(start, end.get_parent()) + [end.get_position()]
 
 
 class Node:
   def __init__(self, transport_list, position):
     self.state = "undiscovered"
-    self.parent = {"transport": None, "parent_node": None}
-    self.adjacency_list = self.add_adj_list(transport_list)
+    self.parent = None
     self.transport_list = transport_list
+    self.ticket_list = None
     self.position = position
-    self.f = math.inf
-    self.g = math.inf
-    self.h = math.inf
-    self.x = 0
-    self.y = 0
-    
-  def add_adj_list(self, transport_list):
-    adjacency_list = []
-    for transport_tuple in transport_list:
-      adjacency_list.append(transport_tuple[1])
-
-    return adjacency_list
+    self.parent_transport = None
 
   def get_state(self):
     return self.state
@@ -128,49 +88,28 @@ class Node:
     self.state = new_state
     
   def get_parent(self):
-    return self.parent["parent_node"]
-
-  def get_parent_transport(self):
-    return self.parent["transport"]
+    return self.parent
 
   def set_parent(self, new_parent):
-    self.parent["parent_node"] = new_parent
-
-  def set_parent_transport(self, new_transport):
-    self.parent["transport"] = new_transport
-
-  def get_adjacency_list(self):
-    return self.adjacency_list
+    self.parent = new_parent
 
   def get_transport_list(self):
     return self.transport_list
 
+  def get_ticket_list(self):
+    return self.ticket_list
+
+  def set_ticket_list(self, ticket_list):
+    self.ticket_list = ticket_list
+
   def get_position(self):
     return self.position
 
-class NodePQueue:
-  def __init__(self):
-    self.queue = []
+  def get_parent_transport(self):
+    return self.parent_transport
 
-  def put(self, node):
-    self.queue.append(node)
-
-  def isEmpty(self):
-    return len(self.queue) == 0
-
-  def node_exists(self, node):
-    for item in self.queue:
-      if item.position == node.position:
-        return True
-    return False
-
-  def get(self):
-    #priority is minimum f value
-    min = 0
-    for i in range(len(self.queue)):
-      if self.queue[i].f < self.queue[min].f:
-        min = i
-    return self.queue.pop(min)
+  def set_parent_transport(self, parent_transport):
+    self.parent_transport = parent_transport
 
 
 class SearchProblem:
@@ -190,16 +129,49 @@ class SearchProblem:
 
     graph = Graph(self.model)
     # print(self.goal[0]) 4th test goal ??????????????/
-    result = graph.bfs(init[0], self.goal[0])
-    
-    asd = []
-    for node in result:
-      asd.append(node.get_position())
-    print(asd)
-
-    result2 = graph.astar(init[0], self.goal[0])
-    for node in result2:
-      print(node.get_position())
-    print(asd)
-    
+    result = graph.bfs(init[0], self.goal[0], tickets)
+    print(result)
     return []
+
+
+def print_result(result_list):
+  def has_play(indexes, lens):
+      has_play = 3
+      for i in range(len(indexes)):
+        if indexes[i] == lens[i]:
+          has_play -= 1
+
+      return has_play > 0
+
+  def get_play(result_list, indexes, lens):
+    if not has_play(indexes, lens):
+      return []
+
+    transports = []
+    positions = []
+
+    for i in range(len(result_list)):
+      result = result_list[i]
+      limit = lens[i]
+      idx = indexes[i]
+      
+      transports.append(result[idx][0])
+      positions.append(result[idx][1])
+      
+      if idx < limit:
+        idx += 1
+
+  final_print = []
+  lens = []
+  indexes = []
+  for r in result_list:
+    lens.append(len(r))
+    indexes.append(0)
+
+  while(True):
+    play = get_play(result_list, indexes, lens)
+
+    if len(play) == 0:
+      break
+
+    final_print.append(play)
