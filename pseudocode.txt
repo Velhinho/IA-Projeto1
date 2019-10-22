@@ -54,6 +54,69 @@ BFS_with_tickets(Graph, start, ticket_list)
             parent_node.state = expanded
 
 
+THREEFS(graph_list, start_list, end_list)
+    queue_list = init_bfs(graph_list, start_list)
+
+    do loop
+        complete = 0
+        for each queue in queue_list
+            queue_done = bfs_step(queue, graph, start)
+
+            if queue_done
+                complete += 1
+
+        if complete == 3
+            break
+    
+    result_list = []
+    for each end in end_list
+        result = Find-Path(graph, start, end)
+        result_list.append(result)
+    return result_list
+
+bfs_step(queue, graph, start)
+    if queue not empty
+        parent_node = queue.pop()
+
+        for each next_vertex in parent_node.adjacency_list
+            child_node = graph.get_node(next_vertex)
+
+            if not graph.enough_tickets(parent_node, next_vertex)
+                    or child_node.get_distance == current_distance + 1
+                continue
+            
+            else if child_node.state == undiscovered
+                child_node.state = discovered
+                child_node.parent = parent_node
+                child_node.ticket_list = graph.take_ticket(parent_node, child_node, next_vertex)
+                child_node.distance = current_distance + 1
+                queue.push(child_node)
+
+            parent_node.state = expanded
+            return false
+
+    else
+        return true
+
+init_bfs(graph_list, start_list)
+    queue_list = {}
+    for each graph in graph_list
+        for each vertex_u in graph
+        vertex_u.state = undiscovered
+        vertex_u.parent = NULL
+        vertex_u.distance = NULL
+
+    for each start in start_list
+        start.state = discovered
+        start.parent = NULL
+        start.distance = 0
+        queue = {}
+        queue.push(start)
+        queue_list.push(queue)
+
+    return queue_list
+
+
 Find-Path(Graph, start, end) 
 // Finds the shortest path recursively after the BFS
 

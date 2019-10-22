@@ -20,10 +20,13 @@ class Graph:
     return self.graph[position]
 
   def enough_tickets(self, parent_node, next_vertex):
-    # Check if enough tickets to go to next vertex
-    transport = next_vertex[0]
-    current_tickets = parent_node.get_ticket_list()
-    return current_tickets[transport] > 0
+    return True
+
+  # def enough_tickets(self, parent_node, next_vertex):
+  #   # Check if enough tickets to go to next vertex
+  #   transport = next_vertex[0]
+  #   current_tickets = parent_node.get_ticket_list()
+  #   return current_tickets[transport] > 0
 
   def take_ticket(self, parent_node, child_node, next_vertex):
     # Take away the ticket necessary to go from parent to child
@@ -33,7 +36,7 @@ class Graph:
     current_tickets[transport] -= 1
     child_node.set_parent_transport(transport)
     return current_tickets
-
+  
   def bfs(self, start_position, end_position, tickets):
     start = self.get_node_from_position(start_position)
     end = self.get_node_from_position(end_position)
@@ -64,18 +67,6 @@ class Graph:
 
     return self.find_path(start, end)
 
-  def find_path(self, start, end):
-
-    if start.get_position() == end.get_position():
-      return [start.get_position()]
-
-    elif end.get_parent() == None:
-      raise ValueError("No path")
-
-    else:
-      return self.find_path(start, end.get_parent()) + [end.get_position()]
-
-
 class Node:
   def __init__(self, transport_list, position):
     self.state = "undiscovered"
@@ -84,6 +75,7 @@ class Node:
     self.ticket_list = None
     self.position = position
     self.parent_transport = None
+    self.distance = None
 
   def get_state(self):
     return self.state
@@ -115,6 +107,12 @@ class Node:
   def set_parent_transport(self, parent_transport):
     self.parent_transport = parent_transport
 
+  def get_distance(self):
+    return self.distance
+
+  def set_distance(self, distance):
+    self.distance = distance
+
 
 class SearchProblem:
 
@@ -131,11 +129,69 @@ class SearchProblem:
   def search(self, init, limitexp = 2000, limitdepth = 10, tickets = [math.inf,math.inf,math.inf], anyorder = False):
     # init = initial position
 
-    graph = Graph(self.model)
+    graph_list = make_graphs(init, self.model)
     # print(self.goal[0]) 4th test goal ??????????????/
-    result = graph.bfs(init[0], self.goal[0], tickets)
-    print(result)
+    result_list = threefs(graph_list)
+    print(result_list)
     return []
+
+
+def make_graphs(start_list, model):
+  graph_list = []
+  for count in enumerate(start_list):
+    graph = Graph(model)
+    graph_list.append(graph)
+  return graph_list
+
+def threefs(graph_list, start_list, end_list):
+  queue_list = init_bfs(graph_list, start_list)
+
+  while True:
+    complete = 0
+    for queue, graph, start in zip(queue_list, graph_list, start_list):
+      queue_done = bfs_step(queue, graph, start)
+
+      if queue_done:
+        complete += 1
+
+    if complete == 3:
+      break
+
+def bfs_step(queue, graph, start):
+  if len(queue) > 0:
+    parent_node = queue.pop(0)
+
+    for next_vertex in parent_node.get_transport_list():
+      child_node = graph.get_node_from_vertex(next_vertex)
+      current_distance = parent_node.get_distance()
+
+      if not graph.enough_tickets(parent_node, next_vertex) \
+          or child_node.get_distance() == current_distance + 1:
+
+
+def init_bfs(graph_list, start_list):
+  queue_list = []
+  
+  for start in start_list:
+    start.set_state("discovered")
+    start.set_parent(None)
+    start.set_distance(0)
+    queue = []
+    queue.append(start)
+    queue_list.append(queue)
+
+  return queue_list
+
+def find_path(self, start, end):
+
+  if start.get_position() == end.get_position():
+    return [start.get_position()]
+
+  elif end.get_parent() == None:
+    raise ValueError("No path")
+
+  else:
+    return self.find_path(start, end.get_parent()) + [end.get_position()]
 
 
 def print_result(result_list):
