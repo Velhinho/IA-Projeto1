@@ -23,7 +23,7 @@ class Graph:
     # Check if enough tickets to go to next vertex
     transport = next_vertex[0]
     current_tickets = parent_node.get_ticket_list()
-    return current_tickets[transport] - 1 > 0
+    return current_tickets[transport] > 0
 
   def take_ticket(self, parent_node, child_node, next_vertex):
     # Take away the ticket necessary to go from parent to child
@@ -42,10 +42,13 @@ class Graph:
     start.set_ticket_list(tickets)
 
     queue = []
+    dq = []
     queue.append(start)
+    dq.append(start.position)
 
     while len(queue) > 0:
       parent_node = queue.pop(0)
+      dq.pop(0)
 
       for next_vertex in parent_node.get_transport_list():
         child_node = self.get_node_from_vertex(next_vertex)
@@ -57,6 +60,7 @@ class Graph:
             current_tickets = self.take_ticket(parent_node, child_node, next_vertex)
             child_node.set_ticket_list(current_tickets)
             queue.append(child_node)
+            dq.append(child_node.position)
 
     return self.find_path(start, end)
 
