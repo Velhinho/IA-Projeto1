@@ -167,7 +167,10 @@ def bfs_step(queue, graph, start):
 
       if not graph.enough_tickets(parent_node, next_vertex) \
           or child_node.get_distance() == current_distance + 1:
+        continue
 
+      if child_node.get_state() == "undiscovered":
+        
 
 def init_bfs(graph_list, start_list):
   queue_list = []
