@@ -23,13 +23,10 @@ class Graph:
     return self.graph[position]
 
   def enough_tickets(self, parent_node, next_vertex):
-    return True
-
-  # def enough_tickets(self, parent_node, next_vertex):
-  #   # Check if enough tickets to go to next vertex
-  #   transport = next_vertex[0]
-  #   current_tickets = parent_node.get_ticket_list()
-  #   return current_tickets[transport] > 0
+    # Check if enough tickets to go to next vertex
+    transport = next_vertex[0]
+    current_tickets = parent_node.get_ticket_list()
+    return current_tickets[transport] > 0
 
   def take_ticket(self, parent_node, child_node, next_vertex):
     # Take away the ticket necessary to go from parent to child
@@ -39,36 +36,6 @@ class Graph:
     current_tickets[transport] -= 1
     child_node.set_parent_transport(transport)
     return current_tickets
-  
-  def bfs(self, start_position, end_position, tickets):
-    start = self.get_node_from_position(start_position)
-    end = self.get_node_from_position(end_position)
-    start.set_state("discovered")
-    start.set_parent(None)
-    start.set_ticket_list(tickets)
-
-    queue = []
-    dq = []
-    queue.append(start)
-    dq.append(start.position)
-
-    while len(queue) > 0:
-      parent_node = queue.pop(0)
-      dq.pop(0)
-
-      for next_vertex in parent_node.get_transport_list():
-        child_node = self.get_node_from_vertex(next_vertex)
-
-        if self.enough_tickets(parent_node, next_vertex):
-          if child_node.get_state() == "undiscovered":
-            child_node.set_state("discovered")
-            child_node.set_parent(parent_node)
-            current_tickets = self.take_ticket(parent_node, child_node, next_vertex)
-            child_node.set_ticket_list(current_tickets)
-            queue.append(child_node)
-            dq.append(child_node.position)
-
-    return self.find_path(start, end)
 
 class Node:
   def __init__(self, transport_list, position):
@@ -134,7 +101,7 @@ class SearchProblem:
 
     graph_list, start_list, end_list = make_graphs(init, self.goal, self.model)
     # print(self.goal[0]) 4th test goal ??????????????/
-    result_list = threefs(graph_list, start_list, end_list)
+    result_list = threefs(graph_list, start_list, end_list, tickets)
     print(result_list)
     return []
 
@@ -155,107 +122,62 @@ def make_graphs(start_position_list, end_position_list, model):
   
   return (graph_list, start_list, end_list)
 
-def threefs(graph_list, start_list, end_list):
-  
+def threefs(graph_list, start_list, end_list, ticket_list):
+  result_list = []
+  for graph, start, end in zip(graph_list, start_list, end_list):
+    result = bfs(graph_list, graph, start, end, ticket_list)
+    result_list.append(result)    
   return result_list
 
-def init_bfs(graph_list, start_list):
-  queue_list = []
-  
-  for start in start_list:
-    start.set_state("discovered")
-    start.set_parent(None)
-    start.set_distance(0)
-    queue = []
-    queue.append(start)
-    queue_list.append(queue)
+def bfs(graph_list, current_graph, start, end, ticket_list):
+  start.set_state("discovered")
+  start.set_parent(None)
+  start.set_distance(0)
+  start.set_ticket_list(ticket_list)
+  queue = []
+  queue.append(start)
 
-  return queue_list
-
-def bfs_step(graph_list, queue, graph, start):
-  if len(queue) > 0:
+  while len(queue) > 0:
     parent_node = queue.pop(0)
+    current_distance = parent_node.get_distance()
 
     for next_vertex in parent_node.get_transport_list():
-      child_node = graph.get_node_from_vertex(next_vertex)
-      current_distance = parent_node.get_distance()
-
-      if (not graph.enough_tickets(parent_node, next_vertex)) \
-          or taken_spot(graph_list, graph, current_distance):
+      child_node = current_graph.get_node_from_vertex(next_vertex)
+      
+      if (not current_graph.enough_tickets(parent_node, next_vertex)) \
+          or taken_spot(graph_list, current_graph, current_distance, next_vertex):
         continue
 
       elif child_node.get_state() == "undiscovered":
         child_node.set_state("discovered")
         child_node.set_parent(parent_node)
         child_node.set_distance(current_distance + 1)
+        current_tickets = current_graph.take_ticket(parent_node, child_node, next_vertex)
+        child_node.set_ticket_list(current_tickets)
         queue.append(child_node)
-
+      
       parent_node.set_state("expanded")
-    return len(queue) == 0
+  
+  return find_path(start, end)
 
-  else:
-    return True
-        
-def taken_spot(graph_list, current_graph, current_distance):
+def taken_spot(graph_list, current_graph, current_distance, next_vertex):
     for graph in graph_list:
         if graph == current_graph:
             continue
 
-        for node in graph.get_node_list():
-            if node.distance == current_distance:
-                return True
+        node = current_graph.get_node_from_vertex(next_vertex)
+        if node.get_state() == "taken" and node.get_distance() == current_distance:
+          return True
     return False
 
 def find_path(start, end):
-
   if start.get_position() == end.get_position():
+    start.set_state("taken")
     return [start.get_position()]
 
   elif end.get_parent() == None:
     raise ValueError("No path")
 
   else:
+    end.set_state("taken")
     return find_path(start, end.get_parent()) + [end.get_position()]
-
-
-def print_result(result_list):
-  def has_play(indexes, lens):
-      has_play = 3
-      for i in range(len(indexes)):
-        if indexes[i] == lens[i]:
-          has_play -= 1
-
-      return has_play > 0
-
-  def get_play(result_list, indexes, lens):
-    if not has_play(indexes, lens):
-      return []
-
-    transports = []
-    positions = []
-
-    for i in range(len(result_list)):
-      result = result_list[i]
-      limit = lens[i]
-      idx = indexes[i]
-      
-      transports.append(result[idx][0])
-      positions.append(result[idx][1])
-      
-      if idx < limit:
-        idx += 1
-
-  final_print = []
-  lens = []
-  indexes = []
-  for r in result_list:
-    lens.append(len(r))
-    indexes.append(0)
-
-  while(True):
-    play = get_play(result_list, indexes, lens)
-
-    if len(play) == 0:
-      break
-
-    final_print.append(play)
