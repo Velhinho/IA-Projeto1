@@ -6,6 +6,7 @@ class Graph:
   def __init__(self, model):
     self.graph = []
     position = 0
+    self.model = model
 
     for transport_list in model:
       node = Node(transport_list, position)
@@ -47,7 +48,9 @@ class Graph:
 
     raise ValueError("bfs: couldn't find path")
 
-  def find_path(self, start, end):
+  def find_path(self, start, end, occupied_nodes):
+
+    occupied_nodes.append(end)
 
     if start.get_position() == end.get_position():
       return [[[], [start.get_position()]]]
@@ -56,17 +59,18 @@ class Graph:
       raise ValueError("No path")
 
     else:
-      return self.find_path(start, end.get_parent()) + [[[end.get_parent_transport()], [end.get_position()]]]
+      return self.find_path(start, end.get_parent(), occupied_nodes) + [[[end.get_parent_transport()], [end.get_position()]]]
 
-  def astar(self, start_position, end_position, tickets):
+  def astar(self, start_position, end_position, tickets, occupied_nodes):
 
-    start = self.get_node(start_position)
-    end = self.get_node(end_position)
+    newgraph = Graph(self.model)
+    start = newgraph.get_node(start_position)
+    end = newgraph.get_node(end_position)
 
     openList = NodePQueue()
     closedList = []
 
-    for node in self.get_graph_iter():
+    for node in newgraph.get_graph_iter():
       node.tickets = [math.inf, math.inf, math.inf]
       node.parent = {"transport": [], "parent_node": None}
       node.f = math.inf
@@ -86,10 +90,10 @@ class Graph:
 
       #end
       if current_node.position == end.position:
-        return self.find_path(start, end), current_node.tickets
+        return newgraph.find_path(start, end, occupied_nodes), current_node.tickets
 
       for neighbor_pos in current_node.get_adjacency_list():
-        neighbor_node = self.get_node(neighbor_pos)
+        neighbor_node = newgraph.get_node(neighbor_pos)
         if neighbor_node in closedList:
           continue
 
@@ -111,11 +115,16 @@ class Graph:
             neighbor_node.set_parent(current_node)
             neighbor_node.g = tentative_g_score
             neighbor_node.f = neighbor_node.g + neighbor_node.h
-            if not openList.node_exists(neighbor_node):
+            if not (openList.node_exists(neighbor_node) or self.node_is_occupied(neighbor_node, occupied_nodes)):
               openList.put(neighbor_node)
 
     raise ValueError("astar: couldn't find path")
 
+  def node_is_occupied(self, node, nodeList):
+    for item in nodeList:
+      if item.g == node.g and item.position == node.position:
+        return True
+    return False
 
 class Node:
   def __init__(self, transport_list, position):
@@ -218,6 +227,7 @@ class SearchProblem:
     # init = initial position
 
     graph = Graph(self.model)
+    
     # # print(self.goal[0]) 4th test goal ??????????????/
     # result = graph.bfs(init[0], self.goal[0])
     # print(result)
@@ -225,13 +235,27 @@ class SearchProblem:
     # result2 = graph.astar(init[0], self.goal[0])
     # print(result2)
 
-    result1, newtickets1 = graph.astar(init[0], self.goal[0], tickets)
+
+    occupied_nodes = []
+    result1, newtickets1 = graph.astar(init[0], self.goal[0], tickets, occupied_nodes)
 
     if len(self.goal) == 1:
       return result1
     else:
-      result2, newtickets2 = graph.astar(init[1], self.goal[1], newtickets1)
-      result3, newtickets3 = graph.astar(init[2], self.goal[2], newtickets2)
+      # print("occupied_nodes:")
+      # for node in occupied_nodes:
+      #   print(node.position)
+      #   print(node.g)
+      result2, newtickets2 = graph.astar(init[1], self.goal[1], newtickets1, occupied_nodes)
+      # print("occupied_nodes:")
+      # for node in occupied_nodes:
+      #   print(node.position)
+      #   print(node.g)
+      result3, newtickets3 = graph.astar(init[2], self.goal[2], newtickets2, occupied_nodes)
+      # print("occupied_nodes:")
+      # for node in occupied_nodes:
+      #   print(node.position)
+      #   print(node.g)
 
       finalres = []
       max_result_length = max(len(result1), len(result2), len(result3))
