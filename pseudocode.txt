@@ -55,34 +55,27 @@ BFS_with_tickets(Graph, start, ticket_list)
 
 
 THREEFS(graph_list, start_list, end_list)
-    queue_list = init_bfs(graph_list, start_list)
-
-    do loop
-        complete = 0
-        for each queue in queue_list
-            queue_done = bfs_step(queue, graph, start)
-
-            if queue_done
-                complete += 1
-
-        if complete == 3
-            break
-    
     result_list = []
-    for each end in end_list
-        result = Find-Path(graph, start, end)
+    for each graph, start, end in graph_list, start_list, end_list
+        result = bfs(graph_list, graph, start, end)
         result_list.append(result)
+
     return result_list
 
-bfs_step(queue, graph, start)
-    if queue not empty
+
+bfs(graph_list, graph, start, end)
+
+    queue = []
+    queue.append(start)
+
+    while queue not empty
         parent_node = queue.pop()
 
         for each next_vertex in parent_node.adjacency_list
             child_node = graph.get_node(next_vertex)
 
             if not graph.enough_tickets(parent_node, next_vertex)
-                    or child_node.get_distance == current_distance + 1
+                    or taken_spot(graph_list, current_graph, current_distance)
                 continue
             
             else if child_node.state == undiscovered
@@ -97,6 +90,17 @@ bfs_step(queue, graph, start)
 
     else
         return true
+
+taken_spot(graph_list, current_graph, current_distance)
+    for each graph in graph_list
+        if graph == current_graph
+            continue
+
+        for each node in graph
+            if node.distance == current_distance and node.state == taken
+                return true
+
+    return false
 
 init_bfs(graph_list, start_list)
     queue_list = {}
@@ -121,10 +125,12 @@ Find-Path(Graph, start, end)
 // Finds the shortest path recursively after the BFS
 
     if start.position == end.position
+        start.state = taken
         return start
 
     else if end.parent == NULL
         return ERROR
 
     else
+        end.state = taken
         return Find-Path(Graph, start, end.parent) + end
