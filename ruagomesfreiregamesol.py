@@ -261,9 +261,21 @@ class SearchProblem:
       max_result_length = max(len(result1), len(result2), len(result3))
       for i in range(0, max_result_length):
         finalres.append([])
-      self.extend_result(result1, max_result_length)
-      self.extend_result(result2, max_result_length)
-      self.extend_result(result3, max_result_length)
+      # self.extend_result(result1, max_result_length)
+      # self.extend_result(result2, max_result_length)
+      # self.extend_result(result3, max_result_length)
+      result_list = []
+      result_list.append(result1)
+      result_list.append(result2)
+      result_list.append(result3)
+
+      print(result_list)
+      self.fix_paths(result_list, occupied_nodes, graph)
+
+      print(result_list)
+      print(result_list[0])
+      print(result_list[1])
+      print(result_list[2])
 
       for index, item in enumerate(finalres):
         if index == 0:
@@ -285,6 +297,8 @@ class SearchProblem:
         goallist.append(result3[index][1][0])
         item.append(goallist)
 
+      print("final result:")
+      print(finalres)
       return finalres
 
 
@@ -293,3 +307,59 @@ class SearchProblem:
     while len(result_list) < new_length:
       result_list.append(last_result)
     return
+
+  def fix_paths(self, result_list, occupied_nodes, graph):
+    max_length = max(len(result) for result in result_list)
+    print(max_length)
+    for result in result_list:
+      i = len(result)
+      print("new result")
+      while i < max_length:
+        time.sleep(0.5)
+        print(i)
+        if i % 2 == 1:
+          print("got in uneven function")
+          final_node = graph.get_node(result[-1][1][0])
+          penultimate_node = graph.get_node(result[-2][1][0])
+          common_positions = list(set(final_node.adjacency_list).intersection(penultimate_node.adjacency_list))
+          if len(common_positions) == 0:
+            print("ULTIMATE FAILURE")
+            print(penultimate_node.position)
+            print(final_node.position)
+          gScore = penultimate_node.g + 1
+          alternative_found = False
+          for pos in common_positions:
+            if alternative_found:
+              print("found alternative, nice")
+              break
+            for node in occupied_nodes:
+              if node.position == pos and node.g != gScore:
+                transportUsed = penultimate_node.transport_dict[str(pos)]
+                result.insert(len(result) - 1, [[transportUsed[0]], [pos]])
+                last_transport = penultimate_node.transport_dict[str(final_node.position)]
+                result[-1][0][0] = last_transport[0]
+                alternative_found = True
+                i += 1
+                break
+        if i == max_length:
+          break
+        final_node = graph.get_node(result[-1][1][0])
+        gScore = final_node.g + 1
+        print("final node position")
+        print(final_node.position)
+        print("final node adjacencylist")
+        print(final_node.adjacency_list)
+        for neighbor_pos in final_node.adjacency_list:
+          neighbor = graph.get_node(neighbor_pos)
+          transportUsed = final_node.transport_dict[str(neighbor_pos)]
+          result.append([[transportUsed[0]], [neighbor_pos]])
+          result.append([[transportUsed[0]], [final_node.position]])
+          i += 2
+          break
+          # if neighbor.g != gScore:
+          #   transportUsed = final_node.transport_dict[str(neighbor_pos)]
+          #   result.append([[transportUsed], [neighbor_pos]])
+          #   i += 2
+          #   break
+    return
+
