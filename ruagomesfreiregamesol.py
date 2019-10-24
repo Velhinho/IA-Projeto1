@@ -83,6 +83,12 @@ class Node:
   def set_distance(self, distance):
     self.distance = distance
 
+  def has_neighbor(self, neighbor):
+    neighbor_pos = neighbor.get_position()
+    for next_vertex in self.get_transport_list():
+      if next_vertex[1] == neighbor_pos:
+        return True
+    return False
 
 class SearchProblem:
 
@@ -100,9 +106,9 @@ class SearchProblem:
     # init = initial position
 
     graph_list, start_list, end_list = make_graphs(init, self.goal, self.model)
-    # print(self.goal[0]) 4th test goal ??????????????/
     result_list = threefs(graph_list, start_list, end_list, tickets)
-    print(result_list)
+    fix_paths(graph_list, result_list)
+    print_list = get_print_list(result_list)
     return []
 
 
@@ -126,7 +132,7 @@ def threefs(graph_list, start_list, end_list, ticket_list):
   result_list = []
   for graph, start, end in zip(graph_list, start_list, end_list):
     result = bfs(graph_list, graph, start, end, ticket_list)
-    result_list.append(result)    
+    result_list.append(result)
   return result_list
 
 def bfs(graph_list, current_graph, start, end, ticket_list):
@@ -173,11 +179,69 @@ def taken_spot(graph_list, current_graph, current_distance, next_vertex):
 def find_path(start, end):
   if start.get_position() == end.get_position():
     start.set_state("taken")
-    return [start.get_position()]
+    return [start]
 
   elif end.get_parent() == None:
     raise ValueError("No path")
 
   else:
     end.set_state("taken")
-    return find_path(start, end.get_parent()) + [end.get_position()]
+    return find_path(start, end.get_parent()) + [end]
+
+def fix_paths(graph_list, result_list):
+  max_len = max(len(x) for x in result_list)
+  for graph, result in zip(graph_list, result_list):
+    extend_path(graph_list, graph, result, max_len)
+
+def extend_path(graph_list, current_graph, result, max_len):
+  diff = len(result) - max_len
+  while diff < 0:    
+    if diff % 2 == 1:
+      fix_odd_path(graph_list, current_graph, result)
+    else:
+      fix_even_path(graph_list, current_graph, result, max_len)
+    diff = len(result) - max_len
+
+def fix_odd_path(graph_list, current_graph, result):
+  final_node = get_node_from_result(current_graph, result, -1)
+  penultimate_node = get_node_from_result(current_graph, result, -2)
+  
+  # Search adjacent vertices for a not yet taken vertex
+  for next_vertex in final_node.get_transport_list():
+    neighbour_node = current_graph.get_node_from_vertex(next_vertex)
+    if neighbour_node.get_state() != "taken" \
+      and neighbour_node.has_neighbor(penultimate_node):
+      extra_node = neighbour_node
+  
+  result.pop()
+  result.append(extra_node)
+  result.append(final_node)
+
+def fix_even_path(graph_list, current_graph, result, max_len):
+  final_pos = get_node_from_result(result, -1)
+  final_node = current_graph.get_node_from_position(final_pos)
+
+  # Search adjacent vertices for a not yet taken vertex
+  for next_vertex in final_node.get_transport_list():
+    neighbour_node = current_graph.get_node_from_vertex(next_vertex)
+    if neighbour_node.get_state() != "taken":
+      extra_node = neighbour_node
+  
+  while len(result) != max_len:
+    result.append(extra_node)
+    result.append(final_node)
+
+def get_node_from_result(graph, result, index):
+  return result[index]
+
+def get_print_list(result_list):
+  print_list = []
+  for nodes in zip(*result_list):
+    transport = []
+    moves = []
+    for node in nodes:
+      transport.append(node.get_parent_transport())
+      moves.append(node.get_position())
+    print_list.append([transport, moves])
+  return print_list
+
