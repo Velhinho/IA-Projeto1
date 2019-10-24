@@ -227,14 +227,6 @@ class SearchProblem:
     # init = initial position
 
     graph = Graph(self.model)
-    
-    # # print(self.goal[0]) 4th test goal ??????????????/
-    # result = graph.bfs(init[0], self.goal[0])
-    # print(result)
-
-    # result2 = graph.astar(init[0], self.goal[0])
-    # print(result2)
-
 
     occupied_nodes = []
     result1, newtickets1 = graph.astar(init[0], self.goal[0], tickets, occupied_nodes)
@@ -242,40 +234,20 @@ class SearchProblem:
     if len(self.goal) == 1:
       return result1
     else:
-      # print("occupied_nodes:")
-      # for node in occupied_nodes:
-      #   print(node.position)
-      #   print(node.g)
       result2, newtickets2 = graph.astar(init[1], self.goal[1], newtickets1, occupied_nodes)
-      # print("occupied_nodes:")
-      # for node in occupied_nodes:
-      #   print(node.position)
-      #   print(node.g)
       result3, newtickets3 = graph.astar(init[2], self.goal[2], newtickets2, occupied_nodes)
-      # print("occupied_nodes:")
-      # for node in occupied_nodes:
-      #   print(node.position)
-      #   print(node.g)
 
       finalres = []
       max_result_length = max(len(result1), len(result2), len(result3))
       for i in range(0, max_result_length):
         finalres.append([])
-      # self.extend_result(result1, max_result_length)
-      # self.extend_result(result2, max_result_length)
-      # self.extend_result(result3, max_result_length)
       result_list = []
       result_list.append(result1)
       result_list.append(result2)
       result_list.append(result3)
 
-      print(result_list)
       self.fix_paths(result_list, occupied_nodes, graph)
 
-      print(result_list)
-      print(result_list[0])
-      print(result_list[1])
-      print(result_list[2])
 
       for index, item in enumerate(finalres):
         if index == 0:
@@ -297,8 +269,6 @@ class SearchProblem:
         goallist.append(result3[index][1][0])
         item.append(goallist)
 
-      print("final result:")
-      print(finalres)
       return finalres
 
 
@@ -310,27 +280,17 @@ class SearchProblem:
 
   def fix_paths(self, result_list, occupied_nodes, graph):
     max_length = max(len(result) for result in result_list)
-    print(max_length)
     for result in result_list:
       i = len(result)
-      print("new result")
       while i < max_length:
-        time.sleep(0.5)
-        print(i)
         if i % 2 == 1:
-          print("got in uneven function")
           final_node = graph.get_node(result[-1][1][0])
           penultimate_node = graph.get_node(result[-2][1][0])
           common_positions = list(set(final_node.adjacency_list).intersection(penultimate_node.adjacency_list))
-          if len(common_positions) == 0:
-            print("ULTIMATE FAILURE")
-            print(penultimate_node.position)
-            print(final_node.position)
           gScore = penultimate_node.g + 1
           alternative_found = False
           for pos in common_positions:
             if alternative_found:
-              print("found alternative, nice")
               break
             for node in occupied_nodes:
               if node.position == pos and node.g != gScore:
@@ -345,10 +305,6 @@ class SearchProblem:
           break
         final_node = graph.get_node(result[-1][1][0])
         gScore = final_node.g + 1
-        print("final node position")
-        print(final_node.position)
-        print("final node adjacencylist")
-        print(final_node.adjacency_list)
         for neighbor_pos in final_node.adjacency_list:
           neighbor = graph.get_node(neighbor_pos)
           transportUsed = final_node.transport_dict[str(neighbor_pos)]
@@ -356,10 +312,5 @@ class SearchProblem:
           result.append([[transportUsed[0]], [final_node.position]])
           i += 2
           break
-          # if neighbor.g != gScore:
-          #   transportUsed = final_node.transport_dict[str(neighbor_pos)]
-          #   result.append([[transportUsed], [neighbor_pos]])
-          #   i += 2
-          #   break
     return
 
